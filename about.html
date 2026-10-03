@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us – NovaMart | Giza</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d9488'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='36' font-family='Arial' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0d9488">
+
+  <link rel="stylesheet" href="Style.css?v=69">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="about-hero">
+    <div class="container">
+      <h1 data-i18n="about_title">About NovaMart</h1>
+      <p class="about-tagline" data-i18n="about_text"></p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-card">
+          <div class="about-icon">✨</div>
+          <h3 data-i18n="value_quality">Curated Quality</h3>
+          <p data-i18n="about_text" style="font-size:0.9rem;line-height:1.6;opacity:0.85"></p>
+        </div>
+        <div class="about-card">
+          <div class="about-icon">🎨</div>
+          <h3 data-i18n="value_design">Design Excellence</h3>
+          <p style="font-size:0.9rem;line-height:1.6;opacity:0.85">
+            <span data-i18n="hero_sub"></span>
+          </p>
+        </div>
+        <div class="about-card">
+          <div class="about-icon">🤝</div>
+          <h3 data-i18n="value_service">Exceptional Service</h3>
+          <p style="font-size:0.9rem;line-height:1.6;opacity:0.85">
+            <span data-i18n="free_return"></span> · <span data-i18n="secure"></span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section delivery-section">
+    <div class="container">
+      <div class="section-title">
+        <h2 data-i18n="delivery">Delivery Options</h2>
+        <p data-i18n="choose_delivery" style="color:var(--text-muted);margin-top:8px"></p>
+      </div>
+      <div class="delivery-grid">
+        <div class="delivery-card">
+          <div class="delivery-icon">🚚</div>
+          <h3 data-i18n="home_delivery">Home Delivery</h3>
+          <p data-i18n="home_delivery_desc"></p>
+          <ul class="delivery-points">
+            <li>✓ <span data-i18n="free_shipping">Free shipping over $50</span></li>
+            <li>✓ 1–3 أيام · 1–3 days</li>
+            <li>✓ تتبع الشحنة · Order tracking</li>
+          </ul>
+        </div>
+        <div class="delivery-card featured">
+          <div class="delivery-badge" data-i18n="showroom_pickup">Showroom Pickup</div>
+          <div class="delivery-icon">🏛️</div>
+          <h3 data-i18n="showroom_pickup">Showroom Pickup</h3>
+          <p data-i18n="showroom_pickup_desc"></p>
+          <p class="showroom-loc">📍 <span data-i18n="showroom_address">Pyramids Road, Giza, Egypt</span></p>
+          <ul class="delivery-points">
+            <li>✓ جرّب قبل ما تشتري · Try before you buy</li>
+            <li>✓ استلام فوري · Same-day pickup</li>
+            <li>✓ استشارة شخصية · Personal advice</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container text-center">
+      <h2 style="margin-bottom:12px" data-i18n="location">Headquarters</h2>
+      <p style="font-size:1.1rem;margin-bottom:8px">📍 <strong data-i18n="address_full">Pyramids Road, Giza, Egypt</strong></p>
+      <p style="color:var(--text-muted)">+20 2 3855 1234 · support@novamart.com</p>
+      <a href="index.html#products" class="btn btn-primary mt-2" data-i18n="shop_now">Shop Now</a>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+  <div class="toast"></div>
+
+  <script src="assets/products.js?v=69"></script>
+  <script src="assets/en.js"></script>
+  <script src="assets/ar.js"></script>
+  <script src="script.js?v=69"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initCommon();
+    });
+  </script>
+</body>
+</html>

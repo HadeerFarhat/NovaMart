@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout – NovaMart</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d9488'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='36' font-family='Arial' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0d9488">
+
+  <link rel="stylesheet" href="Style.css?v=69">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2 data-i18n="checkout_title">Checkout</h2>
+        <span class="secure-badge">🔒 <span data-i18n="secure_payment">Secure Payment</span></span>
+      </div>
+      <div id="checkoutContent"></div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+  <div class="toast"></div>
+
+  <script src="assets/products.js?v=69"></script>
+  <script src="assets/en.js"></script>
+  <script src="assets/ar.js"></script>
+  <script src="script.js?v=69"></script>
+  <script>
+    function renderCheckout() {
+      const el = document.getElementById('checkoutContent');
+      if (cart.length === 0) {
+        el.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🛒</div>
+            <p data-i18n="empty_cart">Your cart is empty</p>
+            <a href="index.html" class="btn btn-primary mt-2" data-i18n="continue_shopping">Continue Shopping</a>
+          </div>
+        `;
+        applyTranslations();
+        return;
+      }
+
+      const total = getCartTotal();
+      const shipping = total >= 50 ? 0 : 9.99;
+      const grand = total + shipping;
+
+      el.innerHTML = `
+        <div class="checkout-grid">
+          <div>
+            <form id="checkoutForm" onsubmit="placeOrder(event)">
+              <div class="form-group">
+                <label data-i18n="name">Full Name</label>
+                <input type="text" id="shipName" required value="${currentUser?.name || ''}">
+              </div>
+              <div class="form-group">
+                <label data-i18n="email">Email</label>
+                <input type="email" id="shipEmail" required value="${currentUser?.email || ''}">
+              </div>
+              <div class="form-group">
+                <label data-i18n="delivery_method">Delivery Method</label>
+                <select id="deliveryMethod" onchange="toggleDeliveryAddress()">
+                  <option value="home" data-i18n="home_delivery">Home Delivery</option>
+                  <option value="showroom" data-i18n="showroom_pickup">Showroom Pickup</option>
+                </select>
+              </div>
+              <div class="form-group" id="addressGroup">
+                <label data-i18n="shipping">Shipping Address</label>
+                <input type="text" id="shipAddress" required placeholder="123 Main St, City, Country">
+              </div>
+              <div class="form-group" id="showroomInfo" style="display:none">
+                <div class="secure-badge" style="margin-bottom:8px">📍 <span data-i18n="showroom_address">Pyramids Road, Giza, Egypt</span></div>
+                <p style="font-size:0.85rem;color:var(--text-muted)" data-i18n="showroom_pickup_desc"></p>
+              </div>
+              <div class="form-group">
+                <label data-i18n="payment">Payment Method</label>
+                <div class="pay-methods" id="payMethods">
+                  <label class="pay-chip active"><input type="radio" name="pay" value="card" checked onchange="toggleCardForm()"> <span>💳</span> Card</label>
+                  <label class="pay-chip"><input type="radio" name="pay" value="apple" onchange="toggleCardForm()"> <span></span> Apple Pay</label>
+                  <label class="pay-chip"><input type="radio" name="pay" value="google" onchange="toggleCardForm()"> <span>G</span> Google Pay</label>
+                  <label class="pay-chip"><input type="radio" name="pay" value="wallet" onchange="toggleCardForm()"> <span>📱</span> Wallet</label>
+                  <label class="pay-chip"><input type="radio" name="pay" value="cod" onchange="toggleCardForm()"> <span>💵</span> COD</label>
+                </div>
+                <input type="hidden" id="paymentMethod" value="card">
+              </div>
+              <div id="cardForm" class="payment-form">
+                <div class="card-brands">
+                  <span class="brand visa">VISA</span>
+                  <span class="brand mc">Mastercard</span>
+                  <span class="brand mada">mada</span>
+                </div>
+                <div class="form-group">
+                  <label data-i18n="card_number">Card Number</label>
+                  <input type="text" id="cardNum" placeholder="**** **** **** ****" maxlength="19" autocomplete="cc-number" inputmode="numeric">
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label data-i18n="expiry">Expiry</label>
+                    <input type="text" id="cardExp" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" inputmode="numeric">
+                  </div>
+                  <div class="form-group">
+                    <label data-i18n="cvv">CVV</label>
+                    <input type="password" id="cardCvv" placeholder="***" maxlength="4" autocomplete="cc-csc" inputmode="numeric">
+                  </div>
+                </div>
+                <div class="ssl-note">🔒 <span data-i18n="ssl">SSL Encrypted</span> · 3-D Secure · PCI-DSS</div>
+              </div>
+              <div id="altPayNote" class="payment-form" style="display:none">
+                <div class="ssl-note" style="margin:0">✨ <span id="altPayText">Complete payment securely with your preferred wallet.</span></div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block" data-i18n="pay_now">Pay Securely</button>
+            </form>
+          </div>
+          <div class="cart-summary">
+            <h3 style="margin-bottom:16px" data-i18n="cart">Order Summary</h3>
+            ${cart.map(item => {
+              const p = products.find(pr => pr.id === item.id);
+              if (!p) return '';
+              return `<div class="summary-row"><span>${getProductName(p)} × ${item.qty}</span><span>${formatPrice(p.price * item.qty)}</span></div>`;
+            }).join('')}
+            <div class="summary-row"><span data-i18n="subtotal">Subtotal</span><span>${formatPrice(total)}</span></div>
+            <div class="summary-row"><span>Shipping</span><span>${shipping === 0 ? 'FREE' : formatPrice(shipping)}</span></div>
+            <div class="summary-row total"><span data-i18n="total">Total</span><span>${formatPrice(grand)}</span></div>
+            <p style="margin-top:12px;font-size:0.85rem;color:var(--text-muted)" data-i18n="returns_policy"></p>
+          </div>
+        </div>
+      `;
+      applyTranslations();
+    }
+
+
+    function toggleDeliveryAddress() {
+      const method = document.getElementById('deliveryMethod')?.value || 'home';
+      const addr = document.getElementById('addressGroup');
+      const showroom = document.getElementById('showroomInfo');
+      const shipInput = document.getElementById('shipAddress');
+      if (method === 'showroom') {
+        if (addr) addr.style.display = 'none';
+        if (showroom) showroom.style.display = 'block';
+        if (shipInput) shipInput.required = false;
+      } else {
+        if (addr) addr.style.display = 'block';
+        if (showroom) showroom.style.display = 'none';
+        if (shipInput) shipInput.required = true;
+      }
+    }
+    window.toggleDeliveryAddress = toggleDeliveryAddress;
+
+    function toggleCardForm() {
+      const selected = document.querySelector('input[name="pay"]:checked');
+      const method = selected ? selected.value : 'card';
+      const hidden = document.getElementById('paymentMethod');
+      if (hidden) hidden.value = method;
+      document.querySelectorAll('.pay-chip').forEach(c => c.classList.toggle('active', c.querySelector('input')?.value === method));
+      const form = document.getElementById('cardForm');
+      const alt = document.getElementById('altPayNote');
+      const altText = document.getElementById('altPayText');
+      if (form) form.style.display = method === 'card' ? 'block' : 'none';
+      if (alt) alt.style.display = method === 'card' ? 'none' : 'block';
+      if (altText) {
+        const msgs = {
+          apple: currentLang === 'ar' ? 'ادفع بسرعة وأمان عبر Apple Pay' : 'Pay instantly & securely with Apple Pay',
+          google: currentLang === 'ar' ? 'ادفع بسرعة عبر Google Pay' : 'Pay instantly with Google Pay',
+          wallet: currentLang === 'ar' ? 'ادفع من محفظتك الرقمية المرتبطة' : 'Pay from your linked digital wallet',
+          cod: currentLang === 'ar' ? 'ادفع نقدًا عند استلام الطلب' : 'Pay cash when your order arrives'
+        };
+        altText.textContent = msgs[method] || '';
+      }
+    }
+    window.toggleCardForm = toggleCardForm;
+
+    function placeOrder(e) {
+      e.preventDefault();
+      const method = document.getElementById('paymentMethod')?.value || 'card';
+      if (method === 'card') {
+        const num = document.getElementById('cardNum').value.replace(/\s/g,'');
+        const exp = document.getElementById('cardExp').value;
+        const cvv = document.getElementById('cardCvv').value;
+        if (num.length < 13 || !exp || cvv.length < 3) {
+          showToast(currentLang === 'ar' ? 'يرجى إدخال بيانات البطاقة بشكل صحيح' : 'Please enter valid card details');
+          return;
+        }
+      }
+      cart.length = 0;
+      window.cart = cart;
+      saveCart();
+      updateBadges();
+      showToast(t('order_success') || t('order_placed'));
+      setTimeout(() => location.href = 'index.html', 1800);
+    }
+    window.placeOrder = placeOrder;
+
+    const originalSetLang = setLanguage;
+    window.setLanguage = function(lang) {
+      originalSetLang(lang);
+      renderCheckout();
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initCommon();
+      renderCheckout();
+    });
+  </script>
+</body>
+</html>

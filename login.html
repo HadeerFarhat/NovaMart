@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – NovaMart</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d9488'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='36' font-family='Arial' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0d9488">
+
+  <link rel="stylesheet" href="Style.css?v=69">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="container">
+      <div class="auth-container">
+        <div class="auth-brand" dir="ltr">
+          <div class="logo-icon" style="margin:0 auto 12px;width:48px;height:48px;font-size:1.4rem;">N</div>
+          <h2 id="authTitle" data-i18n="login_title">Sign In</h2>
+          <p class="text-muted text-center" style="margin-bottom:20px;font-size:0.9rem" id="authSubtitle">Welcome back to NovaMart</p>
+        </div>
+        <form id="authForm" onsubmit="handleAuth(event)">
+          <div class="form-group" id="nameGroup" style="display:none">
+            <label data-i18n="name">Full Name</label>
+            <input type="text" id="nameInput" placeholder="Your full name" autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label data-i18n="email">Email</label>
+            <input type="email" id="emailInput" required placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label data-i18n="password">Password</label>
+            <input type="password" id="passInput" required placeholder="••••••••" minlength="6" autocomplete="current-password">
+          </div>
+          <div class="form-group" id="confirmGroup" style="display:none">
+            <label data-i18n="confirm_password">Confirm Password</label>
+            <input type="password" id="confirmInput" placeholder="••••••••" minlength="6" autocomplete="new-password">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="authSubmit" data-i18n="login">Login</button>
+        </form>
+        <div class="form-footer">
+          <span id="authSwitchText" data-i18n="no_account">Don't have an account?</span>
+          <a href="#" id="authSwitch" onclick="toggleAuthMode(event)" data-i18n="register">Register</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+  <div class="toast"></div>
+
+  <script src="assets/products.js?v=69"></script>
+  <script src="assets/en.js"></script>
+  <script src="assets/ar.js"></script>
+  <script src="script.js?v=69"></script>
+  <script>
+    let isRegister = false;
+
+    function toggleAuthMode(e) {
+      if (e) e.preventDefault();
+      isRegister = !isRegister;
+      document.getElementById('nameGroup').style.display = isRegister ? 'block' : 'none';
+      document.getElementById('confirmGroup').style.display = isRegister ? 'block' : 'none';
+      document.getElementById('authTitle').textContent = isRegister ? t('register_title') : t('login_title');
+      document.getElementById('authSubtitle').textContent = isRegister
+        ? (currentLang === 'ar' ? 'أنشئ حسابك في نوفا مارت' : 'Create your NovaMart account')
+        : (currentLang === 'ar' ? 'مرحباً بعودتك إلى نوفا مارت' : 'Welcome back to NovaMart');
+      document.getElementById('authSubmit').textContent = isRegister ? t('register') : t('login');
+      document.getElementById('authSwitchText').textContent = isRegister ? t('have_account') : t('no_account');
+      document.getElementById('authSwitch').textContent = isRegister ? t('login') : t('register');
+      document.getElementById('passInput').autocomplete = isRegister ? 'new-password' : 'current-password';
+    }
+
+    function handleAuth(e) {
+      e.preventDefault();
+      const email = document.getElementById('emailInput').value.trim();
+      const pass = document.getElementById('passInput').value;
+      const name = document.getElementById('nameInput').value.trim();
+
+      if (!email || !email.includes('@')) {
+        showToast(currentLang === 'ar' ? 'أدخل بريداً إلكترونياً صحيحاً' : 'Enter a valid email');
+        return;
+      }
+      if (pass.length < 6) {
+        showToast(currentLang === 'ar' ? 'كلمة المرور 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+        return;
+      }
+
+      if (isRegister) {
+        const confirm = document.getElementById('confirmInput').value;
+        if (pass !== confirm) {
+          showToast(currentLang === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match');
+          return;
+        }
+        if (!name || name.length < 2) {
+          showToast(currentLang === 'ar' ? 'أدخل الاسم بالكامل' : 'Please enter your full name');
+          return;
+        }
+        const user = { name, email };
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
+        currentUser = user;
+        window.currentUser = user;
+        showToast(currentLang === 'ar' ? 'تم إنشاء الحساب بنجاح!' : 'Account created successfully!');
+        setTimeout(() => location.href = 'index.html', 1000);
+      } else {
+        const user = { name: email.split('@')[0], email };
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
+        currentUser = user;
+        window.currentUser = user;
+        showToast(currentLang === 'ar' ? 'تم تسجيل الدخول!' : 'Logged in successfully!');
+        setTimeout(() => location.href = 'index.html', 1000);
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem(STORAGE_KEYS.user);
+      currentUser = null;
+      window.currentUser = null;
+      location.reload();
+    }
+
+    window.logout = logout;
+    window.toggleAuthMode = toggleAuthMode;
+    window.handleAuth = handleAuth;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initCommon();
+      if (currentUser) {
+        document.querySelector('.auth-container').innerHTML = `
+          <div class="text-center">
+            <div class="logo-icon" style="margin:0 auto 16px;width:48px;height:48px;">N</div>
+            <h2>${currentLang === 'ar' ? 'مرحباً' : 'Welcome'}, ${currentUser.name}</h2>
+            <p class="text-muted" style="margin:8px 0 20px">${currentUser.email}</p>
+            <button class="btn btn-primary btn-block" onclick="logout()">${t('logout')}</button>
+            <a href="index.html" class="btn btn-outline btn-block mt-2" data-i18n="continue_shopping">Continue Shopping</a>
+          </div>
+        `;
+        applyTranslations();
+      }
+    });
+  </script>
+</body>
+</html>

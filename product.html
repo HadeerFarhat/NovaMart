@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product – NovaMart</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d9488'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='36' font-family='Arial' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0d9488">
+
+  <link rel="stylesheet" href="Style.css?v=69">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="container">
+      <div id="productDetail"></div>
+      <div id="related" style="margin-top:48px;">
+        <div class="reviews-section" id="reviewsSection">
+          <h3 data-i18n="customer_reviews">Customer Reviews</h3>
+          <div class="review-list" id="reviewList"></div>
+        </div>
+        <div class="section-title"><h2 id="relatedTitle">Similar Products</h2></div>
+        <div class="product-grid" id="relatedGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+  <div class="toast"></div>
+
+  <script src="assets/products.js?v=69"></script>
+  <script src="assets/en.js"></script>
+  <script src="assets/ar.js"></script>
+  <script src="script.js?v=69"></script>
+  <script>
+    let currentProduct = null;
+    let qty = 1;
+
+    function renderProductDetail() {
+      const id = parseInt(new URLSearchParams(location.search).get('id'), 10);
+      currentProduct = products.find(p => p.id === id);
+      const el = document.getElementById('productDetail');
+
+      if (!currentProduct) {
+        el.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">😕</div>
+            <p data-i18n="no_results">Product not found</p>
+            <a href="index.html" class="btn btn-primary mt-2" data-i18n="continue_shopping">Continue Shopping</a>
+          </div>`;
+        applyTranslations();
+        return;
+      }
+
+      document.title = getProductName(currentProduct) + ' – NovaMart';
+      const discount = currentProduct.oldPrice
+        ? Math.round((1 - currentProduct.price / currentProduct.oldPrice) * 100) : 0;
+      const inWish = isInWishlist(currentProduct.id);
+      qty = 1;
+
+      el.innerHTML = `
+        <div class="product-detail">
+          <div class="detail-gallery">
+            <div class="detail-img">
+              <img src="${currentProduct.image}" alt="${getProductName(currentProduct)}" id="mainProductImg">
+            </div>
+            ${discount > 0 ? `<span class="detail-discount-badge">-${discount}%</span>` : ''}
+          </div>
+          <div class="detail-info">
+            <div class="product-cat">${getCategoryName(currentProduct.category)}</div>
+            <h1 class="detail-title">${getProductName(currentProduct)}</h1>
+            <div class="detail-meta">
+              <span class="stars">${'★'.repeat(Math.floor(currentProduct.rating))}${'☆'.repeat(5 - Math.floor(currentProduct.rating))}</span>
+              <span>${currentProduct.rating} · ${currentProduct.reviews || Math.round((currentProduct.rating||4)*17+5)} ${t('reviews')}</span>
+              <span class="${currentProduct.stock > 0 ? 'stock-in' : 'stock-out'}">
+                ${currentProduct.stock > 0 ? t('in_stock') : t('out_of_stock')} (${currentProduct.stock})
+              </span>
+            </div>
+            <div class="detail-price-row">
+              <span class="detail-price">${formatPrice(currentProduct.price)}</span>
+              ${currentProduct.oldPrice ? `<span class="detail-old">${formatPrice(currentProduct.oldPrice)}</span>` : ''}
+              ${discount > 0 ? `<span class="detail-save">-${discount}%</span>` : ''}
+            </div>
+            <p class="detail-desc">${getProductDesc(currentProduct)}</p>
+            <div class="detail-divider"></div>
+            <div class="detail-qty-row">
+              <span class="qty-label" data-i18n="quantity">Qty</span>
+              <div class="qty-control">
+                <button type="button" id="qtyMinus" aria-label="Decrease">−</button>
+                <span id="qtyVal">1</span>
+                <button type="button" id="qtyPlus" aria-label="Increase">+</button>
+              </div>
+            </div>
+            <div class="detail-actions">
+              <button type="button" class="btn btn-primary btn-lg" id="btnAddCart">${t('add_to_cart')}</button>
+              <button type="button" class="btn btn-secondary btn-lg" id="btnBuyNow">${t('buy_now')}</button>
+              <button type="button" class="btn btn-outline" id="btnWish">${inWish ? '♥' : '♡'} ${t('wishlist')}</button>
+            </div>
+            <div class="detail-perks">
+              <div class="perk">🚚 <span data-i18n="home_delivery">Home Delivery</span></div>
+              <div class="perk">🏛️ <span data-i18n="showroom_pickup">Showroom Pickup</span> — Giza</div>
+              <div class="perk">↩️ <span data-i18n="free_return">30-Day Free Returns</span></div>
+              <div class="perk">🔒 <span data-i18n="secure">Secure checkout</span></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Bind buttons (no fragile inline handlers)
+      document.getElementById('qtyMinus').onclick = function () {
+        qty = Math.max(1, qty - 1);
+        document.getElementById('qtyVal').textContent = qty;
+      };
+      document.getElementById('qtyPlus').onclick = function () {
+        qty = Math.min(currentProduct.stock || 99, qty + 1);
+        document.getElementById('qtyVal').textContent = qty;
+      };
+      document.getElementById('btnAddCart').onclick = function () {
+        addToCart(currentProduct.id, qty);
+      };
+      document.getElementById('btnBuyNow').onclick = function () {
+        addToCart(currentProduct.id, qty);
+        location.href = 'cart.html';
+      };
+      document.getElementById('btnWish').onclick = function () {
+        toggleWishlist(currentProduct.id);
+        const btn = document.getElementById('btnWish');
+        if (btn) btn.innerHTML = (isInWishlist(currentProduct.id) ? '♥' : '♡') + ' ' + t('wishlist');
+      };
+
+      // Many similar products from same category
+      let related = products
+        .filter(p => p.category === currentProduct.category && p.id !== currentProduct.id);
+      // shuffle lightly by rating then take up to 12
+      related = related.sort((a, b) => b.rating - a.rating).slice(0, 12);
+      renderReviews(currentProduct);
+      document.getElementById('relatedGrid').innerHTML = related.map(p => productCardHTML(p)).join('');
+      const relTitle = document.querySelector('#related .section-title h2');
+      if (relTitle) {
+        relTitle.textContent = (currentLang === 'ar' ? 'منتجات مشابهة من نفس القسم' : 'Similar from this category');
+      }
+      applyTranslations();
+    }
+
+    window.renderProductDetail = renderProductDetail;
+
+    const originalSetLang = setLanguage;
+    window.setLanguage = function (lang) {
+      originalSetLang(lang);
+      renderProductDetail();
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+      initCommon();
+      renderProductDetail();
+    });
+  
+    // Customer reviews — initials only (no photos / no trainer images)
+    function renderReviews(product) {
+      const list = document.getElementById('reviewList');
+      if (!list || !product) return;
+
+      const data = currentLang === 'ar' ? [
+        { n: 'سارة م.', t: 'المنتج ممتاز والتوصيل كان سريع. أنصح بالشراء.' },
+        { n: 'أحمد ك.', t: 'الجودة عالية والسعر مناسب. شكراً نوفا مارت.' },
+        { n: 'ليلى ح.', t: 'وصل بحالة ممتازة ومطابق للوصف تماماً.' },
+        { n: 'عمر ر.', t: 'تجربة شراء سهلة والدفع آمن. راضٍ جداً.' },
+        { n: 'نور أ.', t: 'شكل المنتج أنيق والتغليف محترم.' },
+        { n: 'يوسف ت.', t: 'خدمة جيدة وتوصيل للجيزة في وقت مناسب.' },
+        { n: 'مايا س.', t: 'اشتريته هدية وكان الاختيار موفق.' },
+        { n: 'كريم ب.', t: 'قيمة ممتازة مقابل السعر. سأكرر الطلب.' }
+      ] : [
+        { n: 'Sara M.', t: 'Excellent product and fast delivery. Highly recommend.' },
+        { n: 'Ahmed K.', t: 'High quality and fair price. Thanks NovaMart.' },
+        { n: 'Layla H.', t: 'Arrived in perfect condition. Matches the description.' },
+        { n: 'Omar R.', t: 'Easy checkout and secure payment. Very satisfied.' },
+        { n: 'Nour A.', t: 'Looks stylish and packaging was careful.' },
+        { n: 'Youssef T.', t: 'Good service and timely delivery to Giza.' },
+        { n: 'Maya S.', t: 'Bought it as a gift — great choice.' },
+        { n: 'Karim B.', t: 'Excellent value for money. Will order again.' }
+      ];
+
+      const colors = ['#0d9488','#6366f1','#db2777','#0284c7','#d97706','#059669','#e11d48','#7c3aed'];
+      const seed = Number(product.id) || 1;
+      const picks = [(seed) % 8, (seed + 3) % 8, (seed + 5) % 8];
+
+      list.innerHTML = picks.map((idx, i) => {
+        const item = data[idx];
+        const stars = Math.min(5, Math.max(4, Math.round(product.rating) - (i === 2 ? 1 : 0)));
+        const letter = item.n.charAt(0);
+        return (
+          '<div class="review-item">' +
+            '<div class="review-avatar" style="background:' + colors[idx] + '" aria-hidden="true">' + letter + '</div>' +
+            '<div class="review-body">' +
+              '<div class="review-name">' + item.n + '</div>' +
+              '<div class="review-meta">' + '★'.repeat(stars) + '☆'.repeat(5 - stars) +
+                (currentLang === 'ar' ? ' · مشتري موثّق' : ' · Verified buyer') + '</div>' +
+              '<p class="review-text">' + item.t + '</p>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+    }
+
+  </script>
+</body>
+</html>

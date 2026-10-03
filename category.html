@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Category – NovaMart</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d9488'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='36' font-family='Arial' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0d9488">
+
+  <link rel="stylesheet" href="Style.css?v=69">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section category-hero" id="catHero">
+    <div class="container">
+      <div class="cat-hero-inner">
+        <div class="cat-hero-img" id="catHeroImg"></div>
+        <div class="cat-hero-text">
+          <p class="breadcrumb"><a href="index.html" data-i18n="home">Home</a> / <span id="catBreadcrumb">Category</span></p>
+          <h1 id="catTitle">Category</h1>
+          <p id="catCount" class="text-muted"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="filters-bar">
+        <div>
+          <label data-i18n="sort_by">Sort by</label>
+          <select id="sortBy" onchange="renderCategoryProducts()">
+            <option value="default" data-i18n="newest">Newest</option>
+            <option value="price-asc" data-i18n="price_low">Price: Low to High</option>
+            <option value="price-desc" data-i18n="price_high">Price: High to Low</option>
+            <option value="rating" data-i18n="rating">Top Rated</option>
+          </select>
+        </div>
+      </div>
+      <div class="product-grid" id="productGrid"></div>
+      <div id="noResults" class="empty-state hidden">
+        <div class="icon">🔍</div>
+        <p data-i18n="no_results">No products found</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+  <div class="toast"></div>
+
+  <script src="assets/products.js?v=69"></script>
+  <script src="assets/en.js"></script>
+  <script src="assets/ar.js"></script>
+  <script src="script.js?v=69"></script>
+  <script>
+    const CAT_IMAGES = {
+      watches: 'img/product-407.jpg',
+      jewelry: 'img/product-368.jpg',
+      footwear: 'img/product-269.jpg',
+      bags: 'img/product-362.jpg',
+      accessories: 'img/product-359.jpg',
+      winter: 'img/product-71.jpg',
+      summer: 'img/product-78.jpg',
+      appliances: 'img/product-9.jpg',
+      electronics: 'img/product-208.jpg',
+      beauty: 'img/product-115.jpg',
+      furniture: 'img/product-7.jpg',
+      gaming: 'img/product-174.jpg'
+    };
+
+    let catId = 'all';
+    let catProducts = [];
+
+    function renderCategoryProducts() {
+      const sort = (document.getElementById('sortBy') || {}).value || 'default';
+      let list = [...catProducts];
+      if (sort === 'price-asc') list.sort((a,b) => a.price - b.price);
+      else if (sort === 'price-desc') list.sort((a,b) => b.price - a.price);
+      else if (sort === 'rating') list.sort((a,b) => b.rating - a.rating);
+
+      const grid = document.getElementById('productGrid');
+      const noRes = document.getElementById('noResults');
+      if (!list.length) {
+        grid.innerHTML = '';
+        noRes.classList.remove('hidden');
+      } else {
+        noRes.classList.add('hidden');
+        grid.innerHTML = list.map(p => productCardHTML(p)).join('');
+      }
+      document.getElementById('catCount').textContent =
+        list.length + ' ' + t('results');
+    }
+
+    function initCategory() {
+      catId = new URLSearchParams(location.search).get('id') || 'all';
+      const cat = SITE_CATEGORIES.find(c => c.id === catId) || SITE_CATEGORIES[0];
+      const name = currentLang === 'ar' ? cat.name_ar : cat.name_en;
+      document.title = name + ' – NovaMart';
+      document.getElementById('catTitle').textContent = name;
+      document.getElementById('catBreadcrumb').textContent = name;
+
+      const img = CAT_IMAGES[catId] || (products.find(p => p.category === catId) || {}).image || 'img/product-1.jpg';
+      document.getElementById('catHeroImg').innerHTML = `<img src="${img}" alt="${name}">`;
+
+      catProducts = catId === 'all' ? [...products] : products.filter(p => p.category === catId);
+      renderCategoryProducts();
+    }
+
+    window.renderCategoryProducts = renderCategoryProducts;
+
+    const originalSetLang = setLanguage;
+    window.setLanguage = function(lang) {
+      originalSetLang(lang);
+      initCategory();
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initCommon();
+      initCategory();
+    });
+  </script>
+</body>
+</html>

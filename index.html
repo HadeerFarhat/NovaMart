@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaMart – Premium Marketplace | الجيزة</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d9488'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='36' font-family='Arial' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0d9488">
+
+  <link rel="stylesheet" href="Style.css?v=69">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <!-- Promo Hero with product images -->
+  <section class="hero hero-promo">
+    <div class="hero-bg-collage" id="heroCollage"></div>
+    <div class="hero-overlay"></div>
+    <div class="container hero-content">
+      <div class="hero-text">
+        <span class="hero-badge" data-i18n="offers">Special Offers</span>
+        <h1 data-i18n="welcome">Welcome to NovaMart</h1>
+        <p data-i18n="hero_sub">Based in Giza, Egypt. Discover premium fashion, home, tech and more. Original quality, fast delivery.</p>
+        <div class="hero-btns">
+          <a href="#offers" class="btn btn-primary" data-i18n="offers">Special Offers</a>
+          <a href="#categories" class="btn btn-ghost" data-i18n="categories">Categories</a>
+        </div>
+        <div class="hero-stats">
+          <div><strong id="statProducts">436</strong><span data-i18n="all_products">Products</span></div>
+          <div><strong>30%</strong><span data-i18n="clearance">Clearance</span></div>
+          <div><strong>Giza</strong><span data-i18n="location">HQ</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories with real images -->
+  <section class="section" id="categories">
+    <div class="container">
+      <div class="section-title">
+        <h2 data-i18n="categories">Categories</h2>
+        <p class="section-sub" data-i18n="choose_delivery" style="opacity:0.7;font-size:0.95rem"></p>
+      </div>
+      <div class="cat-grid cat-grid-images" id="catGrid"></div>
+    </div>
+  </section>
+
+  <!-- Offers -->
+  <section class="section" id="offers">
+    <div class="container">
+      <div class="section-title">
+        <h2 data-i18n="offers">Special Offers</h2>
+      </div>
+      <div class="product-grid" id="offersGrid"></div>
+    </div>
+  </section>
+
+  <!-- Clearance -->
+  <section class="section" id="clearance">
+    <div class="container">
+      <div class="section-title">
+        <h2 data-i18n="clearance">Clearance Sale</h2>
+      </div>
+      <div class="product-grid" id="clearanceGrid"></div>
+    </div>
+  </section>
+
+  <!-- All Products -->
+  <section class="section" id="products">
+    <div class="container">
+      <div class="section-title">
+        <h2 id="productsTitle" data-i18n="all_products">All Products</h2>
+        <span id="resultsCount" class="text-muted"></span>
+      </div>
+
+      <div class="filters-bar">
+        <div>
+          <label data-i18n="filter">Filter</label>
+          <select id="filterCat" onchange="applyFilters()">
+          </select>
+        </div>
+        <div>
+          <label data-i18n="sort_by">Sort by</label>
+          <select id="sortBy" onchange="applyFilters()">
+            <option value="default" data-i18n="newest">Newest</option>
+            <option value="price-asc" data-i18n="price_low">Price: Low to High</option>
+            <option value="price-desc" data-i18n="price_high">Price: High to Low</option>
+            <option value="rating" data-i18n="rating">Top Rated</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="product-grid" id="productGrid"></div>
+      <div id="noResults" class="empty-state hidden">
+        <div class="icon">🔍</div>
+        <p data-i18n="no_results">No products found</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+  <div class="toast"></div>
+
+  <script src="assets/products.js?v=69"></script>
+  <script src="assets/en.js"></script>
+  <script src="assets/ar.js"></script>
+  <script src="script.js?v=69"></script>
+  <script>
+    let filteredProducts = [...products];
+
+    // Best representative image per category (real product photos)
+    const CAT_IMAGES = {
+      watches: 'img/product-407.jpg',
+      jewelry: 'img/product-512.jpg',
+      footwear: 'img/product-269.jpg',
+      bags: 'img/product-6.jpg',
+      accessories: 'img/product-359.jpg',
+      winter: 'img/product-71.jpg',
+      summer: 'img/product-78.jpg',
+      appliances: 'img/product-9.jpg',
+      electronics: 'img/product-208.jpg',
+      beauty: 'img/product-115.jpg',
+      furniture: 'img/product-69.jpg',
+      gaming: 'img/product-171.jpg'
+    };
+
+    function getCatImage(catId) {
+      if (CAT_IMAGES[catId]) return CAT_IMAGES[catId];
+      const p = products.find(x => x.category === catId);
+      return p ? p.image : 'img/product-1.jpg';
+    }
+
+    function renderHeroCollage() {
+      const el = document.getElementById('heroCollage');
+      if (!el) return;
+      // Use products with discounts for promo collage
+      const deals = products.filter(p => p.oldPrice).slice(0, 8);
+      const fallback = products.slice(0, 8);
+      const list = deals.length >= 6 ? deals : fallback;
+      el.innerHTML = list.map(p =>
+        `<div class="hero-collage-item"><img src="${p.image}" alt="" loading="lazy"></div>`
+      ).join('');
+    }
+
+    function renderCategories() {
+      const grid = document.getElementById('catGrid');
+      if (!grid) return;
+      const cats = SITE_CATEGORIES.filter(c => c.id !== 'all');
+      grid.innerHTML = cats.map(c => {
+        const count = products.filter(p => p.category === c.id).length;
+        if (count === 0) return '';
+        const img = getCatImage(c.id);
+        const name = currentLang === 'ar' ? c.name_ar : c.name_en;
+        return `
+          <a href="category.html?id=${c.id}" class="cat-card cat-card-img" data-cat="${c.id}">
+            <div class="cat-img-wrap">
+              <img src="${img}" alt="${name}" loading="lazy">
+              <div class="cat-img-overlay"></div>
+            </div>
+            <div class="cat-card-body">
+              <h3>${name}</h3>
+              <span class="cat-count">${count} ${currentLang === 'ar' ? 'منتج' : 'items'}</span>
+            </div>
+          </a>`;
+      }).join('');
+    }
+
+    function renderOffers() {
+      const offers = products.filter(p => p.oldPrice).slice(0, 8);
+      const el = document.getElementById('offersGrid');
+      if (el) el.innerHTML = offers.map(p => productCardHTML(p)).join('');
+    }
+
+    function renderClearance() {
+      const clearance = products.filter(p => p.oldPrice && (1 - p.price / p.oldPrice) >= 0.25).slice(0, 8);
+      const el = document.getElementById('clearanceGrid');
+      if (el) el.innerHTML = clearance.map(p => productCardHTML(p)).join('');
+    }
+
+    function applyFilters() {
+      const params = new URLSearchParams(location.search);
+      const catEl = document.getElementById('filterCat');
+      const sortEl = document.getElementById('sortBy');
+      const searchEl = document.getElementById('searchInput');
+      const cat = (catEl && catEl.value) || params.get('cat') || 'all';
+      const search = ((searchEl && searchEl.value) || params.get('search') || '').toLowerCase().trim();
+      const sort = (sortEl && sortEl.value) || 'default';
+
+      filteredProducts = products.filter(p => {
+        const matchCat = cat === 'all' || p.category === cat;
+        const name = ((p.name_en || '') + ' ' + (p.name_ar || '') + ' ' + (p.desc_en || '') + ' ' + (p.category || '')).toLowerCase();
+        const matchSearch = !search || name.includes(search);
+        return matchCat && matchSearch;
+      });
+
+      if (sort === 'price-asc') filteredProducts.sort((a, b) => a.price - b.price);
+      else if (sort === 'price-desc') filteredProducts.sort((a, b) => b.price - a.price);
+      else if (sort === 'rating') filteredProducts.sort((a, b) => b.rating - a.rating);
+
+      renderProducts();
+    }
+    window.applyFilters = applyFilters;
+
+    function renderProducts() {
+      const grid = document.getElementById('productGrid');
+      const noRes = document.getElementById('noResults');
+      const countEl = document.getElementById('resultsCount');
+      const titleEl = document.getElementById('productsTitle');
+      if (!grid) return;
+
+      const params = new URLSearchParams(location.search);
+      const cat = params.get('cat') || (document.getElementById('filterCat') || {}).value;
+      const search = params.get('search');
+
+      if (search) {
+        titleEl.textContent = '"' + search + '"';
+      } else if (cat && cat !== 'all') {
+        titleEl.textContent = getCategoryName(cat);
+      } else {
+        titleEl.setAttribute('data-i18n', 'all_products');
+        titleEl.textContent = t('all_products');
+      }
+
+      countEl.textContent = filteredProducts.length + ' ' + t('results');
+
+      if (filteredProducts.length === 0) {
+        grid.innerHTML = '';
+        noRes.classList.remove('hidden');
+      } else {
+        noRes.classList.add('hidden');
+        grid.innerHTML = filteredProducts.map(p => productCardHTML(p)).join('');
+      }
+    }
+    window.renderProducts = renderProducts;
+    window.renderCategories = renderCategories;
+    window.renderOffers = renderOffers;
+    window.renderClearance = renderClearance;
+
+    function fillFilterSelect() {
+      const sel = document.getElementById('filterCat');
+      if (!sel) return;
+      const current = new URLSearchParams(location.search).get('cat') || 'all';
+      sel.innerHTML = SITE_CATEGORIES.map(c =>
+        `<option value="${c.id}" ${c.id === current ? 'selected' : ''}>${currentLang === 'ar' ? c.name_ar : c.name_en}</option>`
+      ).join('');
+    }
+
+    // Sticky header scroll effect
+    function initStickyNav() {
+      const onScroll = () => {
+        const header = document.querySelector('.header');
+        if (!header) return;
+        if (window.scrollY > 40) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+
+    const originalSetLang = setLanguage;
+    window.setLanguage = function (lang) {
+      originalSetLang(lang);
+      renderCategories();
+      renderOffers();
+      renderClearance();
+      fillFilterSelect();
+      applyFilters();
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+      initCommon();
+      initStickyNav();
+      renderHeroCollage();
+      renderCategories();
+      renderOffers();
+      renderClearance();
+      fillFilterSelect();
+
+      const params = new URLSearchParams(location.search);
+      if (params.get('cat')) {
+        const fc = document.getElementById('filterCat');
+        if (fc) fc.value = params.get('cat');
+      }
+      if (params.get('search')) {
+        const si = document.getElementById('searchInput');
+        if (si) si.value = params.get('search');
+      }
+      applyFilters();
+
+      const sp = document.getElementById('statProducts');
+      if (sp) sp.textContent = products.length;
+    });
+  </script>
+</body>
+</html>

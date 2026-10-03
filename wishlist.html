@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wishlist – NovaMart</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d9488'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='36' font-family='Arial' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0d9488">
+
+  <link rel="stylesheet" href="Style.css?v=69">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2 data-i18n="wishlist">Wishlist</h2>
+      </div>
+      <div id="wishlistContent"></div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+  <div class="toast"></div>
+
+  <script src="assets/products.js?v=69"></script>
+  <script src="assets/en.js"></script>
+  <script src="assets/ar.js"></script>
+  <script src="script.js?v=69"></script>
+  <script>
+    function renderWishlist() {
+      const el = document.getElementById('wishlistContent');
+      if (wishlist.length === 0) {
+        el.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">♡</div>
+            <p data-i18n="empty_wishlist">Your wishlist is empty</p>
+            <a href="index.html" class="btn btn-primary mt-2" data-i18n="continue_shopping">Continue Shopping</a>
+          </div>
+        `;
+        return;
+      }
+      const items = wishlist.map(id => products.find(p => p.id === id)).filter(Boolean);
+      el.innerHTML = `<div class="product-grid">${items.map(p => productCardHTML(p)).join('')}</div>`;
+    }
+
+    const originalSetLang = setLanguage;
+    window.setLanguage = function(lang) {
+      originalSetLang(lang);
+      renderWishlist();
+    };
+
+    window.renderWishlist = renderWishlist;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initCommon();
+      renderWishlist();
+    });
+  </script>
+</body>
+</html>
